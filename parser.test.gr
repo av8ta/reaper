@@ -1,0 +1,5 @@
+import * from "./parser"
+
+assert s == "import Queue from \"queue\""
+
+print("Ok")
