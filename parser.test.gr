@@ -1,5 +1,8 @@
 import * from "./parser"
 
-assert s == "import Queue from \"queue\""
+let parser = literal("d")
+let matchC = parser("c")
+assert matchC == Err("!match")
 
-print("Ok")
+let matchD = parser("d")
+assert matchD == Ok(("d", ""))
