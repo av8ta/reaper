@@ -1,0 +1,31 @@
+import Array from "array"
+import Option from "option"
+import Result from "result"
+import {
+  make,
+  find,
+  findRange,
+  findAll,
+  findAllRange,
+  replace,
+  replaceAll,
+  MatchResult,
+} from "regex"
+
+/**
+ * helpers lifted from compiler/test/stdlib/regex.test.gr
+ */
+let flattenResult = (mr: MatchResult) => {
+  let otherGroups = Array.init(mr.numGroups - 1, n => mr.group(n + 1))
+  (Option.unwrap(mr.group(0)), otherGroups)
+}
+let flattenResultOption = res =>
+  match (res) {
+    None => None,
+    Some(mr: MatchResult) => {
+      Some(flattenResult(mr))
+    },
+  }
+export let testRegex = (pat, str) =>
+  Result.map(flattenResultOption, Result.map(re => find(re, str), make(pat)))
+

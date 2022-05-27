@@ -1,0 +1,10 @@
+import { testRegex } from "./regex"
+import Option from "option"
+import Result from "result"
+
+assert testRegex("a|b", "cat") == Ok(Some(("a", [>])))
+assert testRegex("\\w+\\.\\w+", "foo.bar") == Ok(Some(("foo.bar", [>])))
+assert testRegex("\\w+@\\w+\\.\\w+", "bob@foo.bar") ==
+Ok(Some(("bob@foo.bar", [>])))
+
+print("Ok")

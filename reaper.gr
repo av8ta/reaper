@@ -1,0 +1,42 @@
+import { startsWith, slice, length } from "string"
+import { testRegex } from "./regex"
+import Option from "option"
+import Result from "result"
+import Regex from "regex"
+
+export let makeRegex = string => Result.unwrap(Regex.make(string))
+
+let boundsFix = (input, start, end) => {
+  // ensure start at beginning of input
+  let min = if(start < 0) 0 else start
+  // bounds check before slicing input string
+  let max = if (end > length(input)) length(input) else end
+  let string = slice(min, max, input)
+  (min, max, string)
+}
+
+export let matches = rule => (input, start, end) => {
+  let (min, max, string) = boundsFix(input, start, end)
+
+  // if start -> end too small to contain rule => -1 
+  if (max - start < length(rule)) -1
+  // else if it matches => rule length
+  else if (startsWith(rule, string)) length(rule) 
+  else -1
+}
+
+/**
+ * return length of matched input string or -1
+ * 0 length match is valid
+ */
+export let matchRegexp = rule => (input, start, end) => {
+  let (min, max, string) = boundsFix(input, start, end)
+  let result = Regex.find(makeRegex(rule), string)
+  match (result) {
+    Some(r) => {
+      let matchedString = Option.unwrap(r.group(0))
+      length(matchedString)
+    },
+    None => -1,
+  }
+}

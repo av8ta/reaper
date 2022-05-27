@@ -1,8 +1,0 @@
-import * from "./parser"
-
-let parser = literal("d")
-let matchC = parser("c")
-assert matchC == Err("!match")
-
-let matchD = parser("d")
-assert matchD == Ok(("d", ""))
