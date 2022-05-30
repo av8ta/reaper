@@ -1,14 +1,16 @@
 import { startsWith, slice, length } from "string"
+import { assertEquals } from "./util"
 import { testRegex } from "./regex"
 import Option from "option"
 import Result from "result"
 import Regex from "regex"
+import List from "list"
 
 export let makeRegex = string => Result.unwrap(Regex.make(string))
 
 let boundsFix = (input, start, end) => {
   // ensure start at beginning of input
-  let min = if(start < 0) 0 else start
+  let min = if (start < 0) 0 else start
   // bounds check before slicing input string
   let max = if (end > length(input)) length(input) else end
   let string = slice(min, max, input)
@@ -17,12 +19,9 @@ let boundsFix = (input, start, end) => {
 
 export let matches = rule => (input, start, end) => {
   let (min, max, string) = boundsFix(input, start, end)
-
-  // if start -> end too small to contain rule => -1 
-  if (max - start < length(rule)) -1
-  // else if it matches => rule length
-  else if (startsWith(rule, string)) length(rule) 
-  else -1
+  // if start -> end too small to contain rule => -1
+  if (max - start < length(rule)) -1 // else if it matches => rule length
+   else if (startsWith(rule, string)) length(rule) else -1
 }
 
 /**
@@ -38,5 +37,45 @@ export let matchRegexp = rule => (input, start, end) => {
       length(matchedString)
     },
     None => -1,
+  }
+}
+
+export let or = matchers => {
+  (input, start, end, groups) => {
+    let mut matchLength = -1
+    for (let mut i = 0; i < List.length(matchers); i += 1) {
+      let matcher = Option.unwrap(List.nth(i, matchers))
+      let n = matcher(input, start, end)
+      // print(["i:", toString(i), "n:", toString(n), input])
+      match (n) {
+        n when n == -1 => void,
+        _ => {
+          matchLength = n
+          break
+        },
+      }
+    }
+    matchLength
+  }
+}
+
+export let and = matchers => {
+  (input, start, end, groups) => {
+    let mut cursor = 0
+    let mut succeeded = true
+    for (let mut i = 0; i < List.length(matchers); i += 1) {
+      let matcher = Option.unwrap(List.nth(i, matchers))
+      let (min, max, string) = boundsFix(input, start + cursor, end)
+      let n = matcher(string, 0, max)
+      // print(["i:", toString(i), "n:", toString(n), toString(string), toString(min), toString(max), ])
+      match (n) {
+        n when n == -1 => {
+          succeeded = false
+          break
+        },
+        _ => cursor += n,
+      }
+    }
+    if (succeeded) cursor else -1
   }
 }

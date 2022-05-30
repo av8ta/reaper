@@ -1,0 +1,1 @@
+export let assertEquals = (fn, expected) => assert fn() == expected

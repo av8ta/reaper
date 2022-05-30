@@ -1,4 +1,4 @@
-import { matches, matchRegexp} from "./reaper"
+import { matches, matchRegexp, or, and } from "./reaper"
 
 let xy = matches("xy")
 assert xy("xyz", 0, 1) == -1
@@ -64,8 +64,52 @@ assert name(" bob ", 1, 5) == 3
 let spaceRule = "^\\s+"
 let space = matchRegexp(spaceRule)
 assert space(" bob ", 0, 5) == 1
-assert space("\u{0020}bob ", 0, 5) == 1           // space
+assert space("\u{0020}bob ", 0, 5) == 1 // space
 assert space("\u{0020}\u{0020}bob ", 0, 999) == 2
 assert space("\u{0009}\u{0020}bob ", 0, 999) == 2 // tab-space
+
+let regexA = "^a"
+let regexB = "^b"
+let regexC = "^c"
+
+let aORb = or([matchRegexp(regexA), matchRegexp(regexB)])
+assert aORb("a", 0, 1, []) == 1
+assert aORb("b", 0, 1, []) == 1
+assert aORb("ba", 0, 2, []) == 1
+assert aORb("ab", 0, 2, []) == 1
+assert aORb("ca", 0, 2, []) == -1
+
+let aORbORc = or(
+  [matchRegexp(regexA), matchRegexp(regexB), matchRegexp(regexC)]
+)
+assert aORbORc("a", 0, 1, []) == 1
+assert aORbORc("b", 0, 1, []) == 1
+assert aORbORc("ba", 0, 2, []) == 1
+assert aORbORc("ab", 0, 2, []) == 1
+assert aORbORc("ca", 0, 2, []) == 1
+assert aORbORc("dc", 0, 2, []) == -1
+
+let barORbaz = or([matches("bar"), matches("baz")])
+assert barORbaz("barbaz", 0, 6, []) == 3
+assert barORbaz("barbaz", 0, 6, []) == 3
+assert barORbaz("baabaa", 0, 6, []) == -1
+
+let aANDb = and([matchRegexp(regexA), matchRegexp(regexB)])
+assert aANDb("ab", 0, 1, []) == -1
+assert aANDb("ba", 0, 1, []) == -1
+assert aANDb("abba", 0, 999, []) == 2
+assert aANDb("ab", 0, 2, []) == 2
+assert aANDb("abba", 0, 2, []) == 2
+
+let barANDbaz = and([matches("bar"), matches("baz")])
+assert barANDbaz("barbaz", 0, 6, []) == 6
+assert barANDbaz("bazbar", 0, 6, []) == -1
+
+let barANDbazANDbuzz = and([matches("bar"), matches("baz"), matches("buzz")])
+assert barANDbazANDbuzz("barbaz", 0, 6, []) == -1
+assert barANDbazANDbuzz("barbazbuzz", 0, 6, []) == -1
+assert barANDbazANDbuzz("barbazbuzz", 0, 10, []) == 10
+assert barANDbazANDbuzz("barbazbuzzer", 0, 12, []) == 10
+assert barANDbazANDbuzz("barbazbuzzer", 0, 999, []) == 10
 
 print("Ok")
