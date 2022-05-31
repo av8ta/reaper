@@ -40,6 +40,16 @@ export let matchRegexp = rule => (input, start, end) => {
   }
 }
 
+let isRegex = string => startsWith("^", string)
+
+export let toMatcher = rule =>
+  match (isRegex(rule)) {
+    true => matchRegexp(rule),
+    false => matches(rule),
+  }
+
+export let toMatchers = rules => List.map(toMatcher, rules)
+
 export let or = matchers => {
   (input, start, end, groups) => {
     let mut matchLength = -1

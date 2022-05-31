@@ -1,4 +1,4 @@
-import { matches, matchRegexp, or, and } from "./reaper"
+import { matches, matchRegexp, toMatcher, toMatchers, or, and } from "./reaper"
 
 let xy = matches("xy")
 assert xy("xyz", 0, 1) == -1
@@ -112,4 +112,32 @@ assert barANDbazANDbuzz("barbazbuzz", 0, 10, []) == 10
 assert barANDbazANDbuzz("barbazbuzzer", 0, 12, []) == 10
 assert barANDbazANDbuzz("barbazbuzzer", 0, 999, []) == 10
 
-print("Ok")
+let matchBob = toMatcher("bob")
+assert matchBob("bob", 0, 999) == 3
+assert matchBob(" bob", 0, 999) == -1
+
+let matchName = toMatcher("^\\w+")
+assert matchName("bob", 0, 999) == 3
+assert matchName("alice ", 0, 999) == 5
+
+let nameRule = "^\\w+"
+let name = toMatcher(nameRule)
+assert name(" bob ", 0, 5) == -1
+assert name(" bob ", 1, 5) == 3
+assert name("bob ", 0, 4) == 3
+assert name("bob ", 0, 4) == 3
+assert name(" bob ", 1, 5) == 3
+
+let bobANDAliceStrings = and(toMatchers(["bob", "alice"]))
+assert bobANDAliceStrings("bobalice", 0, 8, []) == 8
+
+let foxANDfoxes = and(toMatchers(["🦊", "🦊🦊"]))
+assert foxANDfoxes("🦊🦊🦊🦊", 0, 999, []) == 3
+
+let foxANDfoxUnicode = and(toMatchers(["\u{1F98A}", "\u{1F98A}"]))
+assert foxANDfoxUnicode("🦊🦊", 0, 999, []) == 2
+
+let bobANDfoxesMixed = and(toMatchers(["^\\w+", "🦊🦊"]))
+assert bobANDfoxesMixed("bob🦊🦊🦊🦊", 0, 999, []) == 5
+
+print("OK")
