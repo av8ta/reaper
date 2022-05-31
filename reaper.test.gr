@@ -1,143 +1,143 @@
 import { matches, matchRegexp, toMatcher, toMatchers, or, and } from "./reaper"
 
 let xy = matches("xy")
-assert xy("xyz", 0, 1) == -1
-assert xy("xyz", 1, 2) == -1
-assert xy("xxyz", 0, 3) == -1
-assert xy("xxyz", -1, 999) == -1
-assert xy("xyz", 0, 2) == 2
-assert xy("xyz", 0, 3) == 2
-assert xy("xxyz", 1, 999) == 2
-assert xy("xyz", -1, 999) == 2
+assert xy(0, 1, "xyz") == -1
+assert xy(1, 2, "xyz") == -1
+assert xy(0, 3, "xxyz") == -1
+assert xy(-1, 999, "xxyz") == -1
+assert xy(0, 2, "xyz") == 2
+assert xy(0, 3, "xyz") == 2
+assert xy(1, 999, "xxyz") == 2
+assert xy(-1, 999, "xyz") == 2
 
 let any = matches("")
-assert any("", 0, 1) == 0
-assert any(" ", 0, 1) == 0
-assert any("a", 0, 1) == 0
+assert any(0, 1, "") == 0
+assert any(0, 1, " ") == 0
+assert any(0, 1, "a") == 0
 
 let oneSpace = matches(" ")
-assert oneSpace("", 0, 1) == -1
-assert oneSpace(" ", 0, 1) == 1
-assert oneSpace("  ", 0, 2) == 1
+assert oneSpace(0, 1, "") == -1
+assert oneSpace(0, 1, " ") == 1
+assert oneSpace(0, 2, "  ") == 1
 
 let a = matchRegexp("^a")
-assert a("baaa", 0, 3) == -1
-assert a("baaa", 1, 3) == 1
-assert a("aaa", 0, 3) == 1
-assert a("aaa", 1, 5) == 1
+assert a(0, 3, "baaa") == -1
+assert a(1, 3, "baaa") == 1
+assert a(0, 3, "aaa") == 1
+assert a(1, 5, "aaa") == 1
 
 let caat = matchRegexp("^ca+[at]")
-assert caat("caat", 0, 3) == 3
-assert caat("caat", 0, 4) == 4
-assert caat("cat", 0, 3) == 3
-assert caat("catt", 0, 2) == -1
-assert caat("caatt", 0, 2) == -1
-assert caat("caatt", 0, 2) == -1
-assert caat("caatt", 0, 5) == 4
-assert caat("caaatt", 0, 5) == 5
-assert caat("ccaaatt", 1, 4) == 3
-assert caat("ccaaatt", 1, 5) == 4
-assert caat("ccaaatt", 1, 7) == 5
-assert caat("catt", 0, 3) == 3
-assert caat("catt", 0, 4) == 3
-assert caat("ct", 0, 2) == -1
-assert caat("ccaaatt", 2, 7) == -1
+assert caat(0, 3, "caat") == 3
+assert caat(0, 4, "caat") == 4
+assert caat(0, 3, "cat") == 3
+assert caat(0, 2, "catt") == -1
+assert caat(0, 2, "caatt") == -1
+assert caat(0, 2, "caatt") == -1
+assert caat(0, 5, "caatt") == 4
+assert caat(0, 5, "caaatt") == 5
+assert caat(1, 4, "ccaaatt") == 3
+assert caat(1, 5, "ccaaatt") == 4
+assert caat(1, 7, "ccaaatt") == 5
+assert caat(0, 3, "catt") == 3
+assert caat(0, 4, "catt") == 3
+assert caat(0, 2, "ct") == -1
+assert caat(2, 7, "ccaaatt") == -1
 
 let fox = matches("\u{1F98A}") // "🦊"
-assert fox(" 🦊", 0, 999) == -1
-assert fox("🦊", 0, 999) == 1
-assert fox("\u{1F98A}", 0, 999) == 1
+assert fox(0, 999, " 🦊") == -1
+assert fox(0, 999, "🦊") == 1
+assert fox(0, 999, "\u{1F98A}") == 1
 
 let foxy = matches("🦊")
-assert foxy(" 🦊", 0, 999) == -1
-assert foxy("🦊", 0, 999) == 1
-assert foxy("\u{1F98A}", 0, 999) == 1
+assert foxy(0, 999, " 🦊") == -1
+assert foxy(0, 999, "🦊") == 1
+assert foxy(0, 999, "\u{1F98A}") == 1
 
 let nameRule = "^\\w+"
 let name = matchRegexp(nameRule)
-assert name(" bob ", 0, 5) == -1
-assert name(" bob ", 1, 5) == 3
-assert name("bob ", 0, 4) == 3
-assert name("bob ", 0, 4) == 3
-assert name(" bob ", 1, 5) == 3
+assert name(0, 5, " bob ") == -1
+assert name(1, 5, " bob ") == 3
+assert name(0, 4, "bob ") == 3
+assert name(0, 4, "bob ") == 3
+assert name(1, 5, " bob ") == 3
 
 let spaceRule = "^\\s+"
 let space = matchRegexp(spaceRule)
-assert space(" bob ", 0, 5) == 1
-assert space("\u{0020}bob ", 0, 5) == 1 // space
-assert space("\u{0020}\u{0020}bob ", 0, 999) == 2
-assert space("\u{0009}\u{0020}bob ", 0, 999) == 2 // tab-space
+assert space(0, 5, " bob ") == 1
+assert space(0, 5, "\u{0020}bob ") == 1 // space
+assert space(0, 999, "\u{0020}\u{0020}bob ") == 2
+assert space(0, 999, "\u{0009}\u{0020}bob ") == 2 // tab-space
 
 let regexA = "^a"
 let regexB = "^b"
 let regexC = "^c"
 
 let aORb = or([matchRegexp(regexA), matchRegexp(regexB)])
-assert aORb("a", 0, 1, []) == 1
-assert aORb("b", 0, 1, []) == 1
-assert aORb("ba", 0, 2, []) == 1
-assert aORb("ab", 0, 2, []) == 1
-assert aORb("ca", 0, 2, []) == -1
+assert aORb(0, 1, [], "a") == 1
+assert aORb(0, 1, [], "b") == 1
+assert aORb(0, 2, [], "ba") == 1
+assert aORb(0, 2, [], "ab") == 1
+assert aORb(0, 2, [], "ca") == -1
 
 let aORbORc = or(
   [matchRegexp(regexA), matchRegexp(regexB), matchRegexp(regexC)]
 )
-assert aORbORc("a", 0, 1, []) == 1
-assert aORbORc("b", 0, 1, []) == 1
-assert aORbORc("ba", 0, 2, []) == 1
-assert aORbORc("ab", 0, 2, []) == 1
-assert aORbORc("ca", 0, 2, []) == 1
-assert aORbORc("dc", 0, 2, []) == -1
+assert aORbORc(0, 1, [], "a") == 1
+assert aORbORc(0, 1, [], "b") == 1
+assert aORbORc(0, 2, [], "ba") == 1
+assert aORbORc(0, 2, [], "ab") == 1
+assert aORbORc(0, 2, [], "ca") == 1
+assert aORbORc(0, 2, [], "dc") == -1
 
 let barORbaz = or([matches("bar"), matches("baz")])
-assert barORbaz("barbaz", 0, 6, []) == 3
-assert barORbaz("barbaz", 0, 6, []) == 3
-assert barORbaz("baabaa", 0, 6, []) == -1
+assert barORbaz(0, 6, [], "barbaz") == 3
+assert barORbaz(0, 6, [], "barbaz") == 3
+assert barORbaz(0, 6, [], "baabaa") == -1
 
 let aANDb = and([matchRegexp(regexA), matchRegexp(regexB)])
-assert aANDb("ab", 0, 1, []) == -1
-assert aANDb("ba", 0, 1, []) == -1
-assert aANDb("abba", 0, 999, []) == 2
-assert aANDb("ab", 0, 2, []) == 2
-assert aANDb("abba", 0, 2, []) == 2
+assert aANDb(0, 1, [], "ab") == -1
+assert aANDb(0, 1, [], "ba") == -1
+assert aANDb(0, 999, [], "abba") == 2
+assert aANDb(0, 2, [], "ab") == 2
+assert aANDb(0, 2, [], "abba") == 2
 
 let barANDbaz = and([matches("bar"), matches("baz")])
-assert barANDbaz("barbaz", 0, 6, []) == 6
-assert barANDbaz("bazbar", 0, 6, []) == -1
+assert barANDbaz(0, 6, [], "barbaz") == 6
+assert barANDbaz(0, 6, [], "bazbar") == -1
 
 let barANDbazANDbuzz = and([matches("bar"), matches("baz"), matches("buzz")])
-assert barANDbazANDbuzz("barbaz", 0, 6, []) == -1
-assert barANDbazANDbuzz("barbazbuzz", 0, 6, []) == -1
-assert barANDbazANDbuzz("barbazbuzz", 0, 10, []) == 10
-assert barANDbazANDbuzz("barbazbuzzer", 0, 12, []) == 10
-assert barANDbazANDbuzz("barbazbuzzer", 0, 999, []) == 10
+assert barANDbazANDbuzz(0, 6, [], "barbaz") == -1
+assert barANDbazANDbuzz(0, 6, [], "barbazbuzz") == -1
+assert barANDbazANDbuzz(0, 10, [], "barbazbuzz") == 10
+assert barANDbazANDbuzz(0, 12, [], "barbazbuzzer") == 10
+assert barANDbazANDbuzz(0, 999, [], "barbazbuzzer") == 10
 
 let matchBob = toMatcher("bob")
-assert matchBob("bob", 0, 999) == 3
-assert matchBob(" bob", 0, 999) == -1
+assert matchBob(0, 999, "bob") == 3
+assert matchBob(0, 999, " bob") == -1
 
 let matchName = toMatcher("^\\w+")
-assert matchName("bob", 0, 999) == 3
-assert matchName("alice ", 0, 999) == 5
+assert matchName(0, 999, "bob") == 3
+assert matchName(0, 999, "alice ") == 5
 
 let nameRule = "^\\w+"
 let name = toMatcher(nameRule)
-assert name(" bob ", 0, 5) == -1
-assert name(" bob ", 1, 5) == 3
-assert name("bob ", 0, 4) == 3
-assert name("bob ", 0, 4) == 3
-assert name(" bob ", 1, 5) == 3
+assert name(0, 5, " bob ") == -1
+assert name(1, 5, " bob ") == 3
+assert name(0, 4, "bob ") == 3
+assert name(0, 4, "bob ") == 3
+assert name(1, 5, " bob ") == 3
 
 let bobANDAliceStrings = and(toMatchers(["bob", "alice"]))
-assert bobANDAliceStrings("bobalice", 0, 8, []) == 8
+assert bobANDAliceStrings(0, 8, [], "bobalice") == 8
 
 let foxANDfoxes = and(toMatchers(["🦊", "🦊🦊"]))
-assert foxANDfoxes("🦊🦊🦊🦊", 0, 999, []) == 3
+assert foxANDfoxes(0, 999, [], "🦊🦊🦊🦊") == 3
 
 let foxANDfoxUnicode = and(toMatchers(["\u{1F98A}", "\u{1F98A}"]))
-assert foxANDfoxUnicode("🦊🦊", 0, 999, []) == 2
+assert foxANDfoxUnicode(0, 999, [], "🦊🦊") == 2
 
 let bobANDfoxesMixed = and(toMatchers(["^\\w+", "🦊🦊"]))
-assert bobANDfoxesMixed("bob🦊🦊🦊🦊", 0, 999, []) == 5
+assert bobANDfoxesMixed(0, 999, [], "bob🦊🦊🦊🦊") == 5
 
 print("OK")

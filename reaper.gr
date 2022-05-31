@@ -8,7 +8,7 @@ import List from "list"
 
 export let makeRegex = string => Result.unwrap(Regex.make(string))
 
-let boundsFix = (input, start, end) => {
+let boundsFix = (start, end, input) => {
   // ensure start at beginning of input
   let min = if (start < 0) 0 else start
   // bounds check before slicing input string
@@ -17,8 +17,8 @@ let boundsFix = (input, start, end) => {
   (min, max, string)
 }
 
-export let matches = rule => (input, start, end) => {
-  let (min, max, string) = boundsFix(input, start, end)
+export let matches = rule => (start, end, input) => {
+  let (min, max, string) = boundsFix(start, end, input)
   // if start -> end too small to contain rule => -1
   if (max - start < length(rule)) -1 // else if it matches => rule length
    else if (startsWith(rule, string)) length(rule) else -1
@@ -28,8 +28,8 @@ export let matches = rule => (input, start, end) => {
  * return length of matched input string or -1
  * 0 length match is valid
  */
-export let matchRegexp = rule => (input, start, end) => {
-  let (min, max, string) = boundsFix(input, start, end)
+export let matchRegexp = rule => (start, end, input) => {
+  let (min, max, string) = boundsFix(start, end, input)
   let result = Regex.find(makeRegex(rule), string)
   match (result) {
     Some(r) => {
@@ -51,11 +51,11 @@ export let toMatcher = rule =>
 export let toMatchers = rules => List.map(toMatcher, rules)
 
 export let or = matchers => {
-  (input, start, end, groups) => {
+  (start, end, groups, input) => {
     let mut matchLength = -1
     for (let mut i = 0; i < List.length(matchers); i += 1) {
       let matcher = Option.unwrap(List.nth(i, matchers))
-      let n = matcher(input, start, end)
+      let n = matcher(start, end, input)
       // print(["i:", toString(i), "n:", toString(n), input])
       match (n) {
         n when n == -1 => void,
@@ -70,13 +70,13 @@ export let or = matchers => {
 }
 
 export let and = matchers => {
-  (input, start, end, groups) => {
+  (start, end, groups, input) => {
     let mut cursor = 0
     let mut succeeded = true
     for (let mut i = 0; i < List.length(matchers); i += 1) {
       let matcher = Option.unwrap(List.nth(i, matchers))
-      let (min, max, string) = boundsFix(input, start + cursor, end)
-      let n = matcher(string, 0, max)
+      let (min, max, string) = boundsFix(start + cursor, end, input)
+      let n = matcher(0, max, string)
       // print(["i:", toString(i), "n:", toString(n), toString(string), toString(min), toString(max), ])
       match (n) {
         n when n == -1 => {
